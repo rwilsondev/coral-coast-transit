@@ -2,7 +2,6 @@
 
 import React, { useState } from 'react';
 
-// Ticket definitions matching exact user specifications
 const TICKET_BUTTONS = [
   { code: 'AD_DAY', label: 'AD DAY', fare: 1.00, type: 'DAY', color: 'bg-blue-600 hover:bg-blue-700' },
   { code: 'SCH_DAY', label: 'SCH DAY', fare: 1.00, type: 'DAY', color: 'bg-blue-600 hover:bg-blue-700' },
@@ -25,6 +24,21 @@ export default function TicketMachine() {
 
   const routeStops = ['Central Station', 'Market Street', 'Hospital Gate', 'University Campus', 'Coastal Terminal'];
 
+  const recordTransaction = (ticket: any, qty: number, total: number) => {
+    const newTx = {
+      id: Date.now(),
+      ticketName: ticket.label,
+      quantity: qty,
+      totalFare: total,
+      stop: routeStops[currentStopIndex],
+      time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+      status: 'Confirmed (Online)',
+    };
+
+    setTransactionsLog((prev) => [newTx, ...prev]);
+    setSessionTotal((prev) => prev + total);
+  };
+
   const handleTicketClick = (ticket: any) => {
     if (ticket.type === 'COUNT') {
       recordTransaction(ticket, 1, 0.00);
@@ -44,21 +58,6 @@ export default function TicketMachine() {
     setSelectedTicket(null);
     setIsGroupMode(false);
     setQuantity('1');
-  };
-
-  const recordTransaction = (ticket: any, qty: number, total: number) => {
-    const newTx = {
-      id: Date.now(),
-      ticketName: ticket.label,
-      quantity: qty,
-      totalFare: total,
-      stop: routeStops[currentStopIndex],
-      time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
-      status: 'Confirmed (Online)',
-    };
-
-    setTransactionsLog([newTx, ...transactionsLog]);
-    setSessionTotal((prev) => prev + total);
   };
 
   const nextStop = () => {
@@ -81,6 +80,7 @@ export default function TicketMachine() {
             <p className="text-lg font-bold text-emerald-400">{routeStops[currentStopIndex]}</p>
           </div>
           <button 
+            type="button"
             onClick={nextStop}
             className="bg-indigo-600 hover:bg-indigo-500 active:scale-95 text-white font-bold px-4 py-2 rounded-lg shadow transition">
             NEXT STOP ➔
@@ -94,6 +94,7 @@ export default function TicketMachine() {
             <div className="flex justify-between items-center mb-3">
               <span className="text-sm font-semibold uppercase tracking-wider text-slate-400">Ticket Selection Grid</span>
               <button 
+                type="button"
                 onClick={() => { setIsGroupMode(!isGroupMode); setQuantity('1'); }}
                 className={`px-4 py-2 rounded-lg font-bold text-sm transition ${isGroupMode ? 'bg-amber-500 text-slate-950 animate-pulse' : 'bg-slate-700 text-slate-200 hover:bg-slate-600'}`}>
                 {isGroupMode ? 'GROUP MODE: ACTIVE' : 'GROUP MODE: OFF'}
@@ -109,11 +110,12 @@ export default function TicketMachine() {
               </div>
               <div className="flex gap-2">
                 {isGroupMode && (
-                  <button onClick={() => setQuantity('1')} className="bg-rose-900/50 border border-rose-700 text-rose-300 px-3 py-2 rounded-lg text-sm font-bold">
+                  <button type="button" onClick={() => setQuantity('1')} className="bg-rose-900/50 border border-rose-700 text-rose-300 px-3 py-2 rounded-lg text-sm font-bold">
                     Clear Qty
                   </button>
                 )}
                 <button 
+                  type="button"
                   onClick={handleEnter}
                   disabled={!selectedTicket}
                   className={`px-6 py-2 rounded-lg font-black text-lg transition ${selectedTicket ? 'bg-emerald-500 text-slate-950 hover:bg-emerald-400 active:scale-95 shadow-lg' : 'bg-slate-800 text-slate-500 cursor-not-allowed'}`}>
@@ -128,6 +130,7 @@ export default function TicketMachine() {
                 return (
                   <button
                     key={ticket.code}
+                    type="button"
                     onClick={() => handleTicketClick(ticket)}
                     className={`${ticket.color} ${isSelected ? 'ring-4 ring-yellow-400 scale-[1.02]' : ''} h-28 rounded-xl font-bold flex flex-col justify-center items-center p-2 shadow-md active:scale-95 transition border border-white/10`}>
                     <span className="text-base md:text-lg text-center leading-tight">{ticket.label}</span>
@@ -146,6 +149,7 @@ export default function TicketMachine() {
                   {['1', '2', '3', '4', '5', '10'].map((num) => (
                     <button
                       key={num}
+                      type="button"
                       onClick={() => setQuantity(num)}
                       className={`px-4 py-2 rounded-lg font-bold ${quantity === num ? 'bg-amber-500 text-slate-950' : 'bg-slate-700 text-white hover:bg-slate-600'}`}>
                       {num}
@@ -172,4 +176,24 @@ export default function TicketMachine() {
                 transactionsLog.map((tx) => (
                   <div key={tx.id} className="bg-slate-900 border border-slate-700 p-2.5 rounded-lg text-xs flex justify-between items-center">
                     <div>
-                      <p className="font-bold text-white">{tx.ticketName}
+                      <p className="font-bold text-white">{tx.ticketName} {tx.quantity > 1 ? `(x${tx.quantity})` : ''}</p>
+                      <p className="text-slate-400">{tx.stop} • {tx.time}</p>
+                    </div>
+                    <div className="text-right">
+                      <p className="font-bold text-emerald-400">${tx.totalFare.toFixed(2)}</p>
+                      <span className="text-[10px] text-cyan-400 bg-cyan-950 px-1.5 py-0.5 rounded">{tx.status}</span>
+                    </div>
+                  </div>
+                ))
+              )}
+            </div>
+          </div>
+
+          <div className="mt-4 pt-3 border-t border-slate-700 text-center">
+            <p className="text-[11px] text-slate-400">Coral Coast Transit • iPad Driver Console v1.0</p>
+          </div>
+        </div>
+      </div>
+    </main>
+  );
+}
